@@ -1,0 +1,89 @@
+* C:\Users\mike\OneDrive\Documents\GitHub\PSE_Spice\PSEv11_AC.asc
+R2B N015 N011 {RFA}
+R1B N022 N023 {RFA}
+R3B N016 N015 {RFB}
+R4B N019 N022 {RFB}
+R5B N018 N019 {RS}
+C1B N016 N015 {Ccomp}
+C2B N019 N022 {Ccomp}
+R6B N018 N016 {RS}
+B3 P001 0 V=0.5*V(V+)
+R1A N001 N003 {RFA}
+R2A N008 N011 {RFA}
+R3A N002 N001 {RFB}
+R4A N005 N008 {RFB}
+R5A N004 N005 {RS}
+C1A N002 N001 {Ccomp}
+C2A N005 N008 {Ccomp}
+R6A N004 N002 {RS}
+CBA N006 E1 10µ
+CBB N020 E2 10µ
+CDL1 N007 N006 4.7µ
+RA1 Vref N007 47
+RF1 N007 N006 100K
+CDL2 N021 N020 4.7µ
+RA2 Vref N021 47
+RF2 N021 N020 100K
+XU1 N008 N001 v+ 0 N004 ADA4091
+XU2 N022 N015 v+ 0 N018 ADA4091
+S3 E1 N006 CAP_BYP 0 NOSW
+S4 N020 E2 CAP_BYP 0 NOSW
+VDD V+ 0 5
+R7A E1 N005 1m
+R7B E2 N019 1m
+R§VIEZ VIE P001 5K
+R8A N012 VIE {RBALR}
+R8B VIE N017 {RBALR}
+S7 E1 N012 REBAL1 0 NOSW
+S8 N017 E2 REBAL2 0 NOSW
+B1B N010 0 V=V(VR)+{RPWA}*RS*RFA/RFB
+B1A N009 0 V=V(VR)-{PWA}*RS*RFA/RFB
+E§VR VR 0 V+ 0 0.5
+CDL3 N014 N013 4.7µ
+RA3 Vref N014 47
+RF3 N014 N013 100K
+S9 VIE N013 IE_EN 0 NOSW
+V§OffsetA N003 VR 721µ
+V§OffsetB N023 VR -721µ
+XX1 AMP_SEL DAC_EN REBAL1 REBAL2 python_signal_generator
+XX2 N009 N010 VR AMP_SEL DAC_EN N011 mux3_1
+V1 IE_EN NC_01 1
+V2 CAP_BYP 0 0
+
+* block symbol definitions
+.subckt python_signal_generator AMP_SEL DAC_EN REBAL1 REBAL2
+V3 AMP_SEL 0 PWL REPEAT FOREVER file=amp_sel.txt ENDREPEAT
+V4 DAC_EN 0 PWL REPEAT FOREVER file=dac_en.txt ENDREPEAT
+V5 REBAL1 0 PWL REPEAT FOREVER file=rebal1.txt ENDREPEAT
+V6 REBAL2 0 PWL REPEAT FOREVER file=rebal2.txt ENDREPEAT
+.ends python_signal_generator
+
+.subckt mux3_1 A B C S0 S1 O
+S1 N001 A S0 0 NOSW
+S2 N001 B S0 0 NCSW
+S3 O N001 S1 0 NOSW
+S4 O C S1 0 NCSW
+.model NCSW SW(Ron=1G Roff=.0001 Vt=0.5)
+.model NOSW SW(Ron=.0001 Roff=10G Vt=0.5)
+.ends mux3_1
+
+.tran 10m
+.param RS=51.0
+.param RL=500
+.param RFA=100k
+.param RFB=100k
+.param Ccomp=2.9p
+.model NCSW SW(Ron=1G Roff=.0001 Vt=0.5)
+.model NOSW SW(Ron=.0001 Roff=10G Vt=0.5)
+.param Offset=-21u
+.param RBALR=100K
+.ic V(E1)=2.5
+.ic V(E2)=2.5
+.param PWA=1m
+.param RPWA=0.5m
+.param CAP_BYP=1
+.param IE_EN=1
+* Python Script to build PWL Files\nlabel   dt dac amp  rb1  rb2\nstart,      0,    0,     0,    0,     0\npw,    240,    1,     1,    0,      0\ndt0,      60,    0,     0,    0,     0\nrpw,   480,    1,     0,    0,     0\ndt1,    500,    0,     0,    1,     1\ngap,     10,    0,     0,    0,     0
+.lib ADI.lib
+.backanno
+.end
